@@ -1,7 +1,7 @@
 try {
     console.log(self);
     console.log(window);
-    console.log(this);
+    console.log(document);
 }catch (e) {
     console.log(e)
 }

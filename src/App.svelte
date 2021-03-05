@@ -57,22 +57,22 @@
 
 <main>
 	<!-- App Bar -->
-	<nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-		<a className="navbar-brand" href="/#">Task Manager</a>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+		<a class="navbar-brand" href="/#">Task Manager</a>
 		<button
-				className="navbar-toggler"
+				class="navbar-toggler"
 				type="button"
 				data-toggle="collapse"
 				data-target="#navbarText"
 				aria-controls="navbarText"
 				aria-expanded="false"
 				aria-label="Toggle navigation">
-			<span className="navbar-toggler-icon"/>
+			<span class="navbar-toggler-icon"/>
 		</button>
-		<div className="collapse navbar-collapse" id="navbarText">
-			<div className="navbar-nav mr-auto user-details">
+		<div class="collapse navbar-collapse" id="navbarText">
+			<div class="navbar-nav mr-auto user-details">
 				{#if $isAuthenticated}
-          <span className="text-white">&nbsp;&nbsp;{$user.name}
+          <span class="text-white">&nbsp;&nbsp;{$user.name}
 			  ({$user.email})</span>
 				{:else}<span>&nbsp;</span>{/if}
 			</div>
