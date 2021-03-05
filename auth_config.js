@@ -1,4 +1,4 @@
-console.log(env,process);
+console.log(process);
 
 const config = {
     domain: process.env.domain,
