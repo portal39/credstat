@@ -1,143 +1,178 @@
 <script>
 	import {onMount} from "svelte";
-	import auth from "./authService";
-	import {isAuthenticated, user, user_tasks, tasks} from "./store";
-	import TaskItem from "./components/TaskItem.svelte";
-
-	let auth0Client;
-	let newTask;
-
+	import {isAuthenticated, token} from "./store";
+	var auth2;
+	window.start = (googleUser) => {
+		gapi.load('auth2', function() {
+			auth2 = gapi.auth2.init({
+				client_id: '895503250306-0svh9lp60r3hu1ca4p93dbhkd183vcm4.apps.googleusercontent.com',
+				//scope: 'additional_scope'
+			});
+		});
+	}
 	onMount(async () => {
-		auth0Client = await auth.createClient();
+		checkAuth();
+		setInterval(checkAuth,60000)
+		// token.subscribe(checkAuth);
 
-		isAuthenticated.set(await auth0Client.isAuthenticated());
-		user.set(await auth0Client.getUser());
+		// auth0Client = await auth.createClient();
+		//
+		// isAuthenticated.set(await auth0Client.isAuthenticated());
+		// user.set(await auth0Client.getUser());
 	});
-
-	function login() {
-		auth.loginWithPopup(auth0Client);
+	function setAuth(data){
+		token.set(data);
+		if(data.token==''){
+			LogOut();
+		}
+		isAuthenticated.set(!!$token.user);
 	}
 
-	function logout() {
-		auth.logout(auth0Client);
+	async function checkAuth() {
+		await request(setAuth);
+
+	}
+	function request(callback){
+		fetch('https://api.swcred.ru/stat/', {
+			method: 'POST',
+			// mode: 'no-cors',
+			cache: 'no-cache',
+			credentials: 'include',
+			body: JSON.stringify($token)
+		}).then((response) => {
+			return response.json();
+		}).then(callback);
 	}
 
-	function addItem() {
-		let newTaskObject = {
-			id: genRandom(),
-			description: newTask,
-			completed: false,
-			user: $user.email
-		};
+	async function gAuth() {
+		await auth2.grantOfflineAccess().then((authResult) => {token.set({code:authResult['code']});checkAuth()});
+	}
+	async function LogOut(){
 
-		console.log(newTaskObject);
+		token.set({
+			code:'logout',
+			token:'',
+			user:false
+		});
+		isAuthenticated.set(false);
 
-		let updatedTasks = [...$tasks, newTaskObject];
+		await gapi.auth2.getAuthInstance().disconnect();
+		checkAuth();
+		await gapi.signin2.render('signinButton')
 
-		tasks.set(updatedTasks);
-
-		newTask = "";
 	}
 
-	function genRandom(length = 7) {
-		var chars =
-				"0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-		var result = "";
-		for (var i = length; i > 0; --i)
-			result += chars[Math.round(Math.random() * (chars.length - 1))];
-		return result;
-	}
+	import DataTable, {Head, Body, Row, Cell} from '@smui/data-table';
+	import Checkbox from '@smui/checkbox';
+	$: selectedPrice = selected.reduce((total, option) => option.price + total, 0);
+	let options = [
+		{
+			name: 'Broom',
+			description: 'A wooden handled broom.',
+			price: 15
+		},
+		{
+			name: 'Dust Pan',
+			description: 'A plastic dust pan.',
+			price: 8
+		},
+		{
+			name: 'Mop',
+			description: 'A strong, durable mop.',
+			price: 18
+		},
+		{
+			name: 'Bucket',
+			description: 'A metal bucket.',
+			price: 13
+		}
+	];
+	let selected = [options[2]];
+
 </script>
-
-<style>
-	#main-application {
-		margin-top: 50px;
-	}
-</style>
 
 <main>
 	<!-- App Bar -->
-	<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-		<a class="navbar-brand" href="/#">Task Manager</a>
-		<button
-				class="navbar-toggler"
-				type="button"
-				data-toggle="collapse"
-				data-target="#navbarText"
-				aria-controls="navbarText"
-				aria-expanded="false"
-				aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"/>
-		</button>
-		<div class="collapse navbar-collapse" id="navbarText">
-			<div class="navbar-nav mr-auto user-details">
-				{#if $isAuthenticated}
-          <span class="text-white">&nbsp;&nbsp;{$user.name}
-			  ({$user.email})</span>
-				{:else}<span>&nbsp;</span>{/if}
-			</div>
 
-			<span class="navbar-text">
-        <ul class="navbar-nav float-right">
-          {#if $isAuthenticated}
-            <li class="nav-item">
-              <a class="nav-link" href="/#" on:click={logout}>Log Out</a>
-            </li>
-          {:else}
-            <li class="nav-item">
-              <a class="nav-link" href="/#" on:click={login}>Log In</a>
-            </li>
-          {/if}
-        </ul>
-      </span>
+		{#if !$isAuthenticated}
+		<div id="signinButton" class="g-signin2" on:click={gAuth}></div>
+		{:else }
+		<div class="btn" on:click={LogOut}>LogOut</div>
+		{/if}
+
+
+	<section>
+		<h2>Data Table</h2>
+
+		<div>
+			<DataTable table$aria-label="People list">
+				<Head>
+					<Row>
+						<Cell>Name</Cell>
+						<Cell>Favorite Color</Cell>
+						<Cell>Favorite Number</Cell>
+					</Row>
+				</Head>
+				<Body>
+				<Row>
+					<Cell>Steve</Cell>
+					<Cell>Red</Cell>
+					<Cell numeric>45</Cell>
+				</Row>
+				<Row>
+					<Cell>Sharon</Cell>
+					<Cell>Purple</Cell>
+					<Cell numeric>5</Cell>
+				</Row>
+				<Row>
+					<Cell>Rodney</Cell>
+					<Cell>Orange</Cell>
+					<Cell numeric>32</Cell>
+				</Row>
+				<Row>
+					<Cell>Mack</Cell>
+					<Cell>Blue</Cell>
+					<Cell numeric>12</Cell>
+				</Row>
+				</Body>
+			</DataTable>
 		</div>
-	</nav>
 
-	<!-- Application -->
-	{#if !$isAuthenticated}
-		<div class="container mt-5">
-			<div class="row">
-				<div class="col-md-10 offset-md-1">
-					<div class="jumbotron">
-						<h1 class="display-4">Task Management made Easy!</h1>
-						<p class="lead">Instructions</p>
-						<ul>
-							<li>Login to start &#128272;</li>
-							<li>Create Tasks &#128221;</li>
-							<li>Tick off completed tasks &#9989;</li>
-						</ul>
+		<div>
+			With Row Selection:
 
-						<a
-								class="btn btn-primary btn-lg mr-auto ml-auto"
-								href="/#"
-								role="button"
-								on:click={login}>Log In</a>
-					</div>
-				</div>
-			</div>
-		</div>
-	{:else}
-		<div class="container" id="main-application">
-			<div class="row">
-				<div class="col-md-6">
-					<ul class="list-group">
-						{#each $user_tasks as item (item.id)}
-							<TaskItem task={item}/>
-						{/each}
-					</ul>
-				</div>
-
-				<div class="col-md-6">
-					<input
-							class="form-control"
-							bind:value={newTask}
-							placeholder="Enter New Task"/>
-					<br/>
-					<button type="button" class="btn btn-primary" on:click={addItem}>
-						Add Task
-					</button>
-				</div>
+			<div>
+				<DataTable>
+					<Head>
+						<Row>
+							<Cell checkbox>
+								<Checkbox />
+							</Cell>
+							<Cell>Name</Cell>
+							<Cell>Description</Cell>
+							<Cell>Price</Cell>
+						</Row>
+					</Head>
+					<Body>
+					{#each options as option (option.name)}
+						<Row>
+							<Cell checkbox>
+								<Checkbox bind:group={selected} value={option} valueKey={option.name} />
+							</Cell>
+							<Cell>{option.name}</Cell>
+							<Cell>{option.description}</Cell>
+							<Cell numeric>{option.price}</Cell>
+						</Row>
+					{/each}
+					</Body>
+				</DataTable>
 			</div>
 		</div>
-	{/if}
+
+		<pre class="status">Selected: {selected.map(option => option.name).join(', ')}</pre>
+		<pre class="status">Total: {selectedPrice}</pre>
+	</section>
 </main>
+
+
+
