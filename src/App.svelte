@@ -17,15 +17,17 @@
 
 	});
 	let ok='',server='',error='',all_data={},
-	days=[];
+	days=[],files={};
 	async function load(isAuth){
 		if(isAuth){
 			request((resonse)=>{
-				ok=resonse.ok;
-				server=resonse.server;
-				error=resonse.error;
-				all_data = resonse;
+				let data =  resonse.data;
+				ok=data.ok;
+				server=data.server;
+				error=data.error;
+				all_data = data;
 				days = all_data.day;
+				files = resonse.files;
 				// options
 			},{
 				action:'init'
@@ -225,7 +227,7 @@
 							<tr>
 
 								<td>{day.name_}</td>
-								<td>{name.name_}:{prop.name_}</td>
+								<td>{name.name_}:{prop.name_}:{files[prop.name_]}</td>
 
 								<td>{prop.ok}</td>
 								<td>{prop.error}</td>
