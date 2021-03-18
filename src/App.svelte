@@ -17,21 +17,45 @@
 
 	});
 	let ok='',server='',error='',all_data={},
-	days=[],files={};
-	async function load(isAuth){
-		if(isAuth){
-			request((resonse)=>{
-				let data =  resonse.data;
-				ok=data.ok;
-				server=data.server;
-				error=data.error;
+	days=[],files={},
+			offers= [],
+			props= [],
+			filter={};
+	$: {
+		offers.forEach(function (item, i, arr) {
+			if (item.name_ == filter.offer)
+				offers[i]['active'] = true;
+		});
+
+	}
+
+
+	async function reload(){
+		request((response)=>{
+			if(response.data) {
+				let data = response.data;
+				ok = data.ok;
+				server = data.server;
+				error = data.error;
 				all_data = data;
 				days = all_data.day;
-				files = resonse.files;
-				// options
-			},{
-				action:'init'
-			})
+				offers = response.tags.name;
+				props = response.tags.prop;
+				files = response.files;
+			}
+		},JSON.stringify({
+			action: 'getData',
+			filter: filter
+		}))
+	}
+	let interval = false;
+	async function load(isAuth){
+		if(isAuth){
+			reload();
+			if(interval)clearInterval(interval);
+			interval = setInterval(reload, 20000);
+		}else{
+			clearInterval(interval);
 		}
 	}
 	function setAuth(data){
@@ -75,8 +99,53 @@
 		await gapi.signin2.render('signinButton')
 
 	}
+	async function ClearError(){
+		errorLog = {};
+	}
+	async function OfferSelect(){
+		delete filter.pid;
+		errorLog = {};
+		if(filter.offer && filter.offer==this.textContent) {
+			delete filter.offer;
+		}
+		else {
+			filter.offer = this.textContent;
+		}
+		reload();
+	}
+	async function PropSelect(){
+		let pid = this.dataset.pid;
+		delete filter.offer;
+		if(filter.pid && filter.pid==pid)
+			delete filter.pid;
+		else
+			filter.pid = pid;
+		reload();
+	}
+	let errorLog = {};
+	let viewError = '';
+	async function GetError(){
+		viewError = files[this.dataset.pid];
+		request((response)=>{
+			console.log(response)
+			errorLog=response;
 
-	import DataTable, {Head, Body, Row, Cell} from '@smui/data-table';
+		},JSON.stringify({
+			action: 'getError',
+			q:this.dataset
+		}))
+	}
+	async function DateSelect(){
+		let did = this.dataset.did;
+		if(filter.did && filter.did==did)
+			delete filter.did;
+		else
+			filter.did = did;
+		reload();
+	}
+
+	// $: selectOffer =
+	// import DataTable, {Head, Body, Row, Cell} from '@smui/data-table';
 	// import Checkbox from '@smui/checkbox';
 	// $: selectedOk = selected.reduce((total, option) => {
 	// 	console.log(option);
@@ -183,16 +252,6 @@
 		<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
 			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
 				<h1 class="h2">Dashboard</h1>
-<!--				<div class="btn-toolbar mb-2 mb-md-0">-->
-<!--					<div class="btn-group me-2">-->
-<!--						<button type="button" class="btn btn-sm btn-outline-secondary">Share</button>-->
-<!--						<button type="button" class="btn btn-sm btn-outline-secondary">Export</button>-->
-<!--					</div>-->
-<!--					<button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">-->
-<!--						<span data-feather="calendar"></span>-->
-<!--						This week-->
-<!--					</button>-->
-<!--				</div>-->
 			</div>
 
 
@@ -203,10 +262,80 @@
 	SERVER - <b>{server}</b>
 			</pre>
 
+			{#each offers as el}
+				<button type="button" class="btn {el.active ? 'btn-dark' : 'btn-secondary' } m-3" on:click={OfferSelect}>{el.name_}</button>
+			{/each}
+			{#if filter.did}
+				<button type="button" data-did="{filter.did}" on:click={DateSelect} class="btn btn-dark">{filter.did}</button>
+			{/if}
+			{#if filter.pid}
+				<button type="button" data-did="{filter.pid}" on:click={PropSelect} class="btn btn-dark">{files[filter.pid]}</button>
+			{/if}
 
+			{#if errorLog.CPAHub}
+				<button type="button" on:click={ClearError} class="btn btn-dark">Error log CPAHub {viewError}</button>
+				<table class="table table-striped table-hover table-sm table-bordered">
+					<tbody>
+				{#each errorLog.CPAHub as error}
+					<tr><td>{error[2]}</td><td>{error[1]}</td><td>
+						{#each Object.entries(error[0]) as [title, value]}
+							<code>{title}</code> {value}<br/>
+						{/each}
+					</td></tr>
+				{/each}
+					</tbody>
+				</table>
+			{/if}
+			{#if errorLog.MFOGate}
+				<button type="button" on:click={ClearError} class="btn btn-dark">Error log MFOGate {viewError}</button>
 
-				<h4></h4>
+				<div class="alert alert-warning" role="alert">
+					Удалены ошибки с дублями телефона
+				</div>
+				<table class="table table-striped table-hover table-sm table-bordered">
+					<tbody>
+					{#each errorLog.MFOGate as error}
+						<tr><td>{error[2]}</td><td>{error[1]}</td><td>
+							{#each Object.entries(error[0]) as [title, value]}
+								<code>{title}</code> {value}<br/>
+							{/each}
+						</td></tr>
+					{/each}
+					</tbody>
+				</table>
+			{/if}
+			{#if errorLog.Firano}
+				<button type="button" on:click={ClearError} class="btn btn-dark">Error log Firano {viewError}</button>
 
+				<table class="table table-striped table-hover table-sm table-bordered">
+					<tbody>
+					{#each errorLog.Firano as error}
+						<tr><td>{error[2]}</td><td>{error[1]}</td><td>
+							{#each Object.entries(error[0]) as [title, value]}
+								<code>{title}</code>&nbsp;
+								{#if typeof value !== 'object'}{value}<br/>{:else}
+									{JSON.stringify(value)}
+								{/if}
+							{/each}
+						</td></tr>
+					{/each}
+					</tbody>
+				</table>
+			{/if}
+			{#if errorLog.MTarget}
+				<button type="button" on:click={ClearError} class="btn btn-dark">Error log MTarget {viewError}</button>
+
+				<div class="alert alert-warning" role="alert">
+					Данные агрегированы
+				</div>
+				<table class="table table-striped table-hover table-sm table-bordered">
+					<tbody>
+					{#each errorLog.MTarget as error}
+						<tr><td>{error.key}</td><td>{error.doc_count}</td></tr>
+					{/each}
+					</tbody>
+				</table>
+			{/if}
 			<table class="table table-striped table-hover table-sm table-bordered">
 				<thead>
 					<tr>
@@ -226,11 +355,11 @@
 						{#each name.prop as prop}
 							<tr>
 
-								<td>{day.name_}</td>
-								<td>{name.name_}:{prop.name_}:{files[prop.name_]}</td>
+								<td data-did="{day.name_}" on:click={DateSelect}>{day.name_}</td>
+								<td data-pid="{prop.name_}" on:click={PropSelect}>{name.name_}:{prop.name_}: <code>{files[prop.name_]}</code></td>
 
 								<td>{prop.ok}</td>
-								<td>{prop.error}</td>
+								<td data-did="{day.name_}" data-pid="{prop.name_}" data-tid="{name.name_}" on:click={GetError}>{prop.error}</td>
 								<td>{prop.server}</td>
 							</tr>
 						{/each}
