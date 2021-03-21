@@ -18,7 +18,9 @@
 
 	});
 	let ok='',server='',error='',all_data={},
-	days=[],files={},
+	days=[],
+			files={},
+			valueJS={},
 			offers= [],
 			props= [],
 			filter={};
@@ -139,7 +141,7 @@
 	async function GetErrorById(){
 
 		request((response)=>{
-			errorLog=response;
+			valueJS=response.ID;
 
 		},JSON.stringify({
 			action: 'getErrorById',
@@ -214,8 +216,8 @@
 				<button type="button" data-did="{filter.pid}" on:click={PropSelect} class="btn btn-dark">{files[filter.pid]}</button>
 			{/if}
 
-			{#if errorLog.ID}
-				<JSONTree {errorLog.ID} />
+			{#if valueJS}
+				<JSONTree {valueJS} />
 			{/if}
 
 			{#if errorLog.CPAHub}
