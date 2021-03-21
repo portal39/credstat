@@ -143,13 +143,9 @@
 	async function GetErrorById(){
 
 		request((response)=>{
-			valueJS=response.ID;
-			try {
-				jsonValue = new Function(`return ${valueJS}`)();
-				error2 = null;
-			} catch (e) {
-				error2 = e;
-			}
+
+			jsonValue = new Function(`return ${response}`)();
+
 		},JSON.stringify({
 			action: 'getErrorById',
 			q:this.dataset
