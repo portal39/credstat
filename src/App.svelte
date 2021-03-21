@@ -27,12 +27,6 @@
 	let jsonValue;
 	let error2 = null;
 	$: {
-		try {
-			jsonValue = new Function(`return ${valueJS}`)();
-			error2 = null;
-		} catch (e) {
-			error2 = e;
-		}
 		offers.forEach(function (item, i, arr) {
 			if (filter.offer && item.name_ == filter.offer) {
 				offers[i]['active'] = true;
@@ -150,6 +144,12 @@
 
 		request((response)=>{
 			valueJS=response.ID;
+			try {
+				jsonValue = new Function(`return ${valueJS}`)();
+				error2 = null;
+			} catch (e) {
+				error2 = e;
+			}
 		},JSON.stringify({
 			action: 'getErrorById',
 			q:this.dataset
@@ -290,9 +290,9 @@
 				</table>
 			{/if}
 
-			{#if valueJS}
-				<JSONTree value={jsonValue} />
-			{/if}
+
+			<JSONTree value={jsonValue} />
+
 			<table class="table table-striped table-hover table-sm table-bordered">
 				<thead>
 					<tr>
