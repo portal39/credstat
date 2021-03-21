@@ -128,11 +128,20 @@
 	async function GetError(){
 		viewError = files[this.dataset.pid];
 		request((response)=>{
-			console.log(response)
 			errorLog=response;
 
 		},JSON.stringify({
 			action: 'getError',
+			q:this.dataset
+		}))
+	}
+	async function GetErrorById(){
+
+		request((response)=>{
+			errorLog=response;
+
+		},JSON.stringify({
+			action: 'getErrorById',
 			q:this.dataset
 		}))
 	}
@@ -144,6 +153,7 @@
 			filter.did = did;
 		reload();
 	}
+
 
 	// $: selectOffer =
 	// import DataTable, {Head, Body, Row, Cell} from '@smui/data-table';
@@ -177,77 +187,7 @@
 	<div class="row">
 		<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
 			<div class="position-sticky pt-3">
-<!--				<ul class="nav flex-column">-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link active" aria-current="page" href="#">-->
-<!--							<span data-feather="home"></span>-->
-<!--							Dashboard-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="file"></span>-->
-<!--							Orders-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="shopping-cart"></span>-->
-<!--							Products-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="users"></span>-->
-<!--							Customers-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="bar-chart-2"></span>-->
-<!--							Reports-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="layers"></span>-->
-<!--							Integrations-->
-<!--						</a>-->
-<!--					</li>-->
-<!--				</ul>-->
 
-<!--				<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">-->
-<!--					<span>Saved reports</span>-->
-<!--					<a class="link-secondary" href="#" aria-label="Add a new report">-->
-<!--						<span data-feather="plus-circle"></span>-->
-<!--					</a>-->
-<!--				</h6>-->
-<!--				<ul class="nav flex-column mb-2">-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="file-text"></span>-->
-<!--							Current month-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="file-text"></span>-->
-<!--							Last quarter-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="file-text"></span>-->
-<!--							Social engagement-->
-<!--						</a>-->
-<!--					</li>-->
-<!--					<li class="nav-item">-->
-<!--						<a class="nav-link" href="#">-->
-<!--							<span data-feather="file-text"></span>-->
-<!--							Year-end sale-->
-<!--						</a>-->
-<!--					</li>-->
-<!--				</ul>-->
 			</div>
 		</nav>
 		<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -273,12 +213,16 @@
 				<button type="button" data-did="{filter.pid}" on:click={PropSelect} class="btn btn-dark">{files[filter.pid]}</button>
 			{/if}
 
+			{#if errorLog.ID}
+				<pre class="status">{errorLog.ID}</pre>
+			{/if}
+
 			{#if errorLog.CPAHub}
 				<button type="button" on:click={ClearError} class="btn btn-dark">Error log CPAHub {viewError}</button>
 				<table class="table table-striped table-hover table-sm table-bordered">
 					<tbody>
 				{#each errorLog.CPAHub as error}
-					<tr><td>{error[2]}</td><td>{error[1]}</td><td>
+					<tr><td on:click={GetErrorById} data-id="{error[3]}">{error[2]}</td><td>{error[1]}</td><td>
 						{#each Object.entries(error[0]) as [title, value]}
 							<code>{title}</code> {value}<br/>
 						{/each}
@@ -296,7 +240,7 @@
 				<table class="table table-striped table-hover table-sm table-bordered">
 					<tbody>
 					{#each errorLog.MFOGate as error}
-						<tr><td>{error[2]}</td><td>{error[1]}</td><td>
+						<tr><td on:click={GetErrorById} data-id="{error[3]}">{error[2]}</td><td>{error[1]}</td><td>
 							{#each Object.entries(error[0]) as [title, value]}
 								<code>{title}</code> {value}<br/>
 							{/each}
@@ -311,7 +255,7 @@
 				<table class="table table-striped table-hover table-sm table-bordered">
 					<tbody>
 					{#each errorLog.Firano as error}
-						<tr><td>{error[2]}</td><td>{error[1]}</td><td>
+						<tr><td on:click={GetErrorById} data-id="{error[3]}">{error[2]}</td><td>{error[1]}</td><td>
 							{#each Object.entries(error[0]) as [title, value]}
 								<code>{title}</code>&nbsp;
 								{#if typeof value !== 'object'}{value}<br/>{:else}
@@ -372,7 +316,7 @@
 
 
 
-<!--			<pre class="status">Selected: {selected.map(option => option.name_).join(', ')}</pre>-->
+
 <!--			<pre class="status">Total: {selectedOk}</pre>-->
 
 		</section>
