@@ -23,8 +23,9 @@
 			filter={};
 	$: {
 		offers.forEach(function (item, i, arr) {
-			if (item.name_ == filter.offer)
+			if (filter.offer && item.name_ == filter.offer) {
 				offers[i]['active'] = true;
+			}
 		});
 
 	}
