@@ -1,5 +1,5 @@
 <script>
-	import JSONTree from 'svelte-json-tree';
+	import JSONTree from 'svelte-json-tree-auto';
 	import {onMount} from "svelte";
 	import {isAuthenticated, token} from "./store";
 	var auth2;
@@ -20,11 +20,19 @@
 	let ok='',server='',error='',all_data={},
 	days=[],
 			files={},
-			valueJS={},
+			valueJS='',
 			offers= [],
 			props= [],
 			filter={};
+	let jsonValue;
+	let error = null;
 	$: {
+		try {
+			jsonValue = new Function(`return ${valueJS}`)();
+			error = null;
+		} catch (e) {
+			error = e;
+		}
 		offers.forEach(function (item, i, arr) {
 			if (filter.offer && item.name_ == filter.offer) {
 				offers[i]['active'] = true;
@@ -142,7 +150,6 @@
 
 		request((response)=>{
 			valueJS=response.ID;
-
 		},JSON.stringify({
 			action: 'getErrorById',
 			q:this.dataset
@@ -216,9 +223,7 @@
 				<button type="button" data-did="{filter.pid}" on:click={PropSelect} class="btn btn-dark">{files[filter.pid]}</button>
 			{/if}
 
-			{#if valueJS}
-				<JSONTree {valueJS} />
-			{/if}
+
 
 			{#if errorLog.CPAHub}
 				<button type="button" on:click={ClearError} class="btn btn-dark">Error log CPAHub {viewError}</button>
@@ -283,6 +288,10 @@
 					{/each}
 					</tbody>
 				</table>
+			{/if}
+
+			{#if valueJS}
+				<JSONTree value={jsonValue} />
 			{/if}
 			<table class="table table-striped table-hover table-sm table-bordered">
 				<thead>
