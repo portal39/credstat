@@ -25,13 +25,13 @@
 			props= [],
 			filter={};
 	let jsonValue;
-	let error = null;
+	let error2 = null;
 	$: {
 		try {
 			jsonValue = new Function(`return ${valueJS}`)();
-			error = null;
+			error2 = null;
 		} catch (e) {
-			error = e;
+			error2 = e;
 		}
 		offers.forEach(function (item, i, arr) {
 			if (filter.offer && item.name_ == filter.offer) {
