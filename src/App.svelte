@@ -1,4 +1,5 @@
 <script>
+	import JSONTree from 'svelte-json-tree';
 	import {onMount} from "svelte";
 	import {isAuthenticated, token} from "./store";
 	var auth2;
@@ -214,7 +215,7 @@
 			{/if}
 
 			{#if errorLog.ID}
-				<pre class="status">{errorLog.ID}</pre>
+				<JSONTree {errorLog.ID} />
 			{/if}
 
 			{#if errorLog.CPAHub}
