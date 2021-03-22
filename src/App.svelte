@@ -11,13 +11,14 @@
 	});
 	let ok='',server='',error='',all_data={},
 	days=[],
+			jsonView=false,
 			files={},
 			valueJS='',
 			offers= [],
 			props= [],
 			filter={};
-	let jsonValue;
-	let error2 = null;
+	let jsonValue = {'test':123};
+
 	$: {
 		offers.forEach(function (item, i, arr) {
 			if (filter.offer && item.name_ == filter.offer) {
@@ -81,16 +82,10 @@
 	}
 
 	async function gAuth() {
-		Promise.resolve(gapi.auth2.grantOfflineAccess())
+		let ga = gapi.auth2.getAuthInstance();
+		Promise.resolve(ga.grantOfflineAccess())
 				.then((authResult) => {token.set({code:authResult['code']});checkAuth()})
-				.catch(function(error) {
-					console.error(error);
-					if (error && error.error == 'popup_blocked_by_browser') {
-						// A popup has been blocked by the browser
-					} else {
-						// some other error
-					}
-				});
+				.catch(console.error);
 	}
 	async function LogOut(){
 
@@ -106,12 +101,16 @@
 		await gapi.signin2.render('signinButton')
 
 	}
+	async function ClearErrorDetail(){
+		jsonView = false;
+	}
 	async function ClearError(){
 		errorLog = {};
+		ClearErrorDetail();
 	}
 	async function OfferSelect(){
 		delete filter.pid;
-		errorLog = {};
+		ClearError();
 		if(filter.offer && filter.offer==this.textContent) {
 			delete filter.offer;
 		}
@@ -144,8 +143,8 @@
 	async function GetErrorById(){
 
 		request((response)=>{
-
-			jsonValue = new Function(`return ${response}`)();
+			jsonValue =response.ID;
+			jsonView = true;
 
 		},JSON.stringify({
 			action: 'getErrorById',
@@ -162,16 +161,9 @@
 	}
 
 
-	// $: selectOffer =
-	// import DataTable, {Head, Body, Row, Cell} from '@smui/data-table';
-	// import Checkbox from '@smui/checkbox';
-	// $: selectedOk = selected.reduce((total, option) => {
-	// 	console.log(option);
-	// 	option.ok + total}, 0);
-
-	// let selected = [];
 
 </script>
+
 <header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
 	<a class="navbar-brand col-md-3 col-lg-2 me-0 px-3" href="#">CredStat</a>
 	<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -219,9 +211,12 @@
 			{#if filter.pid}
 				<button type="button" data-did="{filter.pid}" on:click={PropSelect} class="btn btn-dark">{files[filter.pid]}</button>
 			{/if}
-
-
-
+			{#if jsonView}
+			<div>
+				<button type="button" on:click={ClearErrorDetail} class="btn btn-dark">Hide error detail</button>
+				<JSONTree value={jsonValue} />
+			</div>
+			{/if}
 			{#if errorLog.CPAHub}
 				<button type="button" on:click={ClearError} class="btn btn-dark">Error log CPAHub {viewError}</button>
 				<table class="table table-striped table-hover table-sm table-bordered">
@@ -288,7 +283,7 @@
 			{/if}
 
 
-			<JSONTree value={jsonValue} />
+
 
 			<table class="table table-striped table-hover table-sm table-bordered">
 				<thead>
