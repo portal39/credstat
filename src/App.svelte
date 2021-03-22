@@ -2,15 +2,7 @@
 	import JSONTree from 'svelte-json-tree-auto';
 	import {onMount} from "svelte";
 	import {isAuthenticated, token} from "./store";
-	var auth2;
-	window.start = (googleUser) => {
-		gapi.load('auth2', function() {
-			auth2 = gapi.auth2.init({
-				client_id: '895503250306-0svh9lp60r3hu1ca4p93dbhkd183vcm4.apps.googleusercontent.com',
-				//scope: 'additional_scope'
-			});
-		});
-	}
+
 	onMount(async () => {
 		checkAuth();
 		setInterval(checkAuth,60000)
@@ -89,7 +81,16 @@
 	}
 
 	async function gAuth() {
-		await auth2.grantOfflineAccess().then((authResult) => {token.set({code:authResult['code']});checkAuth()});
+		Promise.resolve(gapi.auth2.grantOfflineAccess())
+				.then((authResult) => {token.set({code:authResult['code']});checkAuth()})
+				.catch(function(error) {
+					console.error(error);
+					if (error && error.error == 'popup_blocked_by_browser') {
+						// A popup has been blocked by the browser
+					} else {
+						// some other error
+					}
+				});
 	}
 	async function LogOut(){
 
