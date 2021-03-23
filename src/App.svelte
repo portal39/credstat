@@ -11,6 +11,7 @@
 	});
 	let ok='',server='',error='',all_data={},
 	days=[],
+	all={},
 			jsonView=false,
 			files={},
 			valueJS='',
@@ -41,6 +42,7 @@
 				offers = response.tags.name;
 				props = response.tags.prop;
 				files = response.files;
+				all = response.all;
 			}
 		},JSON.stringify({
 			action: 'getData',
@@ -200,6 +202,8 @@
 	OK - <b>{ok}</b>
 	ERROR - <b>{error}</b>
 	SERVER - <b>{server}</b>
+{#if all.this_day_all>0}ALL - <b>{all.this_day_all}</b>{/if}
+{#if all.this_day>0}FROM_COOKIE - <b>{all.this_day}</b>{/if}
 			</pre>
 
 			{#each offers as el}
