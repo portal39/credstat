@@ -59,12 +59,19 @@
 			clearInterval(interval);
 		}
 	}
+	let tries = 0;
 	function setAuth(data){
-		token.set(data);
-		if(data.token==''){
-			LogOut();
+		if(tries<4 && data.token==''){
+			tries++;
+			setTimeout(checkAuth,2000);
+
+		}else {
+			token.set(data);
+			if (data.token == '') {
+				LogOut();
+			}
+			isAuthenticated.set(!!$token.user);
 		}
-		isAuthenticated.set(!!$token.user);
 	}
 
 	async function checkAuth() {
