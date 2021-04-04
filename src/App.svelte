@@ -1,343 +1,44 @@
 <script>
-	import JSONTree from 'svelte-json-tree-auto';
+
 	import {onMount} from "svelte";
-	import {isAuthenticated, token} from "./store";
+	import {isAuthenticated} from "./store";
 
-	onMount(async () => {
-		checkAuth();
-		setInterval(checkAuth,60000)
-		isAuthenticated.subscribe(load);
+	import Main from './Main.svelte';
+	import Auth from './Auth.svelte';
+	import Double from './Double.svelte';
 
-	});
-	let ok='',server='',error='',all_data={},
-	days=[],
-	all={},
-			jsonView=false,
-			files={},
-			valueJS='',
-			offers= [],
-			props= [],
-			filter={};
-	let jsonValue = {'test':123};
-
-	$: {
-		offers.forEach(function (item, i, arr) {
-			if (filter.offer && item.name_ == filter.offer) {
-				offers[i]['active'] = true;
-			}
-		});
-
-	}
-
-
-	async function reload(){
-		request((response)=>{
-			if(response.data) {
-				let data = response.data;
-				ok = data.ok;
-				server = data.server;
-				error = data.error;
-				all_data = data;
-				days = all_data.day;
-				offers = response.tags.name;
-				props = response.tags.prop;
-				files = response.files;
-				all = response.all;
-			}
-		},JSON.stringify({
-			action: 'getData',
-			filter: filter
-		}))
-	}
-	let interval = false;
-	async function load(isAuth){
-		if(isAuth){
-			reload();
-			if(interval)clearInterval(interval);
-			interval = setInterval(reload, 20000);
-		}else{
-			clearInterval(interval);
-		}
-	}
-	let tries = 0;
-	function setAuth(data){
-		if(tries<4 && data.token==''){
-			tries++;
-			setTimeout(checkAuth,2000);
-
-		}else {
-			token.set(data);
-			if (data.token == '') {
-				LogOut();
-			}
-			isAuthenticated.set(!!$token.user);
-		}
-	}
-
-	async function checkAuth() {
-		await request(setAuth,JSON.stringify($token));
-
-	}
-	function request(callback,data){
-		fetch('https://api.swcred.ru/stat/', {
-			method: 'POST',
-			// mode: 'no-cors',
-			cache: 'no-cache',
-			credentials: 'include',
-			body: data,
-		}).then((response) => {
-			return response.json();
-		}).then(callback);
-	}
-
-	async function gAuth() {
-		let ga = gapi.auth2.getAuthInstance();
-		Promise.resolve(ga.grantOfflineAccess())
-				.then((authResult) => {token.set({code:authResult['code']});checkAuth()})
-				.catch(console.error);
-	}
-	async function LogOut(){
-
-		token.set({
-			code:'logout',
-			token:'',
-			user:false
-		});
-		isAuthenticated.set(false);
-
-		await gapi.auth2.getAuthInstance().disconnect();
-		checkAuth();
-		await gapi.signin2.render('signinButton')
-
-	}
-	async function ClearErrorDetail(){
-		jsonView = false;
-	}
-	async function ClearError(){
-		errorLog = {};
-		ClearErrorDetail();
-	}
-	async function OfferSelect(){
-		delete filter.pid;
-		ClearError();
-		if(filter.offer && filter.offer==this.textContent) {
-			delete filter.offer;
-		}
-		else {
-			filter.offer = this.textContent;
-		}
-		reload();
-	}
-	async function PropSelect(){
-		let pid = this.dataset.pid;
-		delete filter.offer;
-		if(filter.pid && filter.pid==pid)
-			delete filter.pid;
-		else
-			filter.pid = pid;
-		reload();
-	}
-	let errorLog = {};
-	let viewError = '';
-	async function GetError(){
-		viewError = files[this.dataset.pid];
-		request((response)=>{
-			errorLog=response;
-
-		},JSON.stringify({
-			action: 'getError',
-			q:this.dataset
-		}))
-	}
-	async function GetErrorById(){
-
-		request((response)=>{
-			jsonValue =response.ID;
-			jsonView = true;
-
-		},JSON.stringify({
-			action: 'getErrorById',
-			q:this.dataset
-		}))
-	}
-	async function DateSelect(){
-		let did = this.dataset.did;
-		if(filter.did && filter.did==did)
-			delete filter.did;
-		else
-			filter.did = did;
-		reload();
-	}
+	let active = "main";
 
 
 
 </script>
+<Auth/>
 
-<header class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0 shadow">
-	<span class="navbar-brand col-md-3 col-lg-2 me-0 px-3">CredStat</span>
-	<button class="navbar-toggler position-absolute d-md-none collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-		<span class="navbar-toggler-icon"></span>
-	</button>
-<!--	<input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search">-->
-
-	{#if $isAuthenticated}
-	<ul class="navbar-nav px-3">
-		<li class="nav-item text-nowrap">
-			<a class="nav-link" on:click={LogOut}>Sign out</a>
-		</li>
-	</ul>
-	{:else}
-		<div id="signinButton" class="g-signin2 navbar-nav px-3" on:click={gAuth}></div>
-	{/if}
-</header>
 {#if $isAuthenticated}
 <div class="container-fluid">
 	<div class="row">
 		<nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
 			<div class="position-sticky pt-3">
-
+				<ul class="nav flex-column">
+					<li class="nav-item">
+						<a class="nav-link active" href="#main" aria-current="page" on:click="{() => active = 'main'}">
+							<span data-feather="home"></span>Dashboard</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#double" on:click="{() => active = 'double'}">
+							<span data-feather="file"></span>Дубли</a>
+					</li>
+				</ul>
 			</div>
 		</nav>
 		<main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-			<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-				<h1 class="h2">Dashboard</h1>
-			</div>
 
-
-		<section>
-			<pre class="status">Всего:
-	OK - <b>{ok}</b>
-	ERROR - <b>{error}</b>
-	SERVER - <b>{server}</b>
-{#if all.this_day_all>0}ALL - <b>{all.this_day_all}</b>{/if}
-{#if all.this_day>0}FROM_COOKIE - <b>{all.this_day}</b>{/if}
-			</pre>
-
-			{#each offers as el}
-				<button type="button" class="btn {el.active ? 'btn-dark' : 'btn-secondary' } m-3" on:click={OfferSelect}>{el.name_}</button>
-			{/each}
-			{#if filter.did}
-				<button type="button" data-did="{filter.did}" on:click={DateSelect} class="btn btn-dark">{filter.did}</button>
+			{#if active==='main'}
+				<Main/>
 			{/if}
-			{#if filter.pid}
-				<button type="button" data-did="{filter.pid}" on:click={PropSelect} class="btn btn-dark">{files[filter.pid]}</button>
+			{#if active==='double'}
+				<Double/>
 			{/if}
-			{#if jsonView}
-			<div>
-				<button type="button" on:click={ClearErrorDetail} class="btn btn-dark">Hide error detail</button>
-				<JSONTree value={jsonValue} />
-			</div>
-			{/if}
-			{#if errorLog.CPAHub}
-				<button type="button" on:click={ClearError} class="btn btn-dark">Error log CPAHub {viewError}</button>
-				<table class="table table-striped table-hover table-sm table-bordered">
-					<tbody>
-				{#each errorLog.CPAHub as error}
-					<tr><td on:click={GetErrorById} data-id="{error[3]}">{error[2]}</td><td>{error[1]}</td><td>
-						{#each Object.entries(error[0]) as [title, value]}
-							<code>{title}</code> {value}<br/>
-						{/each}
-					</td></tr>
-				{/each}
-					</tbody>
-				</table>
-			{/if}
-			{#if errorLog.MFOGate}
-				<button type="button" on:click={ClearError} class="btn btn-dark">Error log MFOGate {viewError}</button>
-
-				<div class="alert alert-warning" role="alert">
-					Удалены ошибки с дублями телефона
-				</div>
-				<table class="table table-striped table-hover table-sm table-bordered">
-					<tbody>
-					{#each errorLog.MFOGate as error}
-						<tr><td on:click={GetErrorById} data-id="{error[3]}">{error[2]}</td><td>{error[1]}</td><td>
-							{#each Object.entries(error[0]) as [title, value]}
-								<code>{title}</code> {value}<br/>
-							{/each}
-						</td></tr>
-					{/each}
-					</tbody>
-				</table>
-			{/if}
-			{#if errorLog.Firano}
-				<button type="button" on:click={ClearError} class="btn btn-dark">Error log Firano {viewError}</button>
-
-				<table class="table table-striped table-hover table-sm table-bordered">
-					<tbody>
-					{#each errorLog.Firano as error}
-						<tr><td on:click={GetErrorById} data-id="{error[3]}">{error[2]}</td><td>{error[1]}</td><td>
-							{#each Object.entries(error[0]) as [title, value]}
-								<code>{title}</code>&nbsp;
-								{#if typeof value !== 'object'}{value}<br/>{:else}
-									{JSON.stringify(value)}
-								{/if}
-							{/each}
-						</td></tr>
-					{/each}
-					</tbody>
-				</table>
-			{/if}
-			{#if errorLog.MTarget}
-				<button type="button" on:click={ClearError} class="btn btn-dark">Error log MTarget {viewError}</button>
-
-				<div class="alert alert-warning" role="alert">
-					Данные агрегированы
-				</div>
-				<table class="table table-striped table-hover table-sm table-bordered">
-					<tbody>
-					{#each errorLog.MTarget as error}
-						<tr><td>{error.key}</td><td>{error.doc_count}</td></tr>
-					{/each}
-					</tbody>
-				</table>
-			{/if}
-
-
-
-
-			<table class="table table-striped table-hover table-sm table-bordered">
-				<thead>
-					<tr>
-
-						<th>Date</th>
-						<th>Offer</th>
-
-						<th>OK</th>
-						<th>ERROR</th>
-						<th>SERVER</th>
-					</tr>
-				</thead>
-				<tbody>
-				{#each days as day}
-					{#each day.name as name}
-
-						{#each name.prop as prop}
-							<tr>
-
-								<td data-did="{day.name_}" on:click={DateSelect}>{day.name_}</td>
-								<td data-pid="{prop.name_}" on:click={PropSelect}>{name.name_}:{prop.name_}: <code>{files[prop.name_]}</code></td>
-
-								<td>{prop.ok}</td>
-								<td data-did="{day.name_}" data-pid="{prop.name_}" data-tid="{name.name_}" on:click={GetError}>{prop.error}</td>
-								<td>{prop.server}</td>
-							</tr>
-						{/each}
-
-					{/each}
-				{/each}
-				</tbody>
-			</table>
-
-
-
-
-<!--			<pre class="status">Total: {selectedOk}</pre>-->
-
-		</section>
-
-
-
 		</main>
 	</div>
 </div>
