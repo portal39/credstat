@@ -28,6 +28,10 @@
 						<a class="nav-link" href="#double" on:click="{() => active = 'double'}">
 							<span data-feather="file"></span>Дубли</a>
 					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="#srez" on:click="{() => active = 'srez'}">
+							<span data-feather="file"></span>Srez</a>
+					</li>
 				</ul>
 			</div>
 		</nav>
@@ -38,6 +42,9 @@
 			{/if}
 			{#if active==='double'}
 				<Double/>
+			{/if}
+			{#if active==='srez'}
+				<Srez/>
 			{/if}
 		</main>
 	</div>
