@@ -6,6 +6,7 @@
 	import Main from './Main.svelte';
 	import Auth from './Auth.svelte';
 	import Double from './Double.svelte';
+	import Srez from './Srez.svelte';
 
 	let active = "main";
 
