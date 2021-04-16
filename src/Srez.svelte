@@ -84,12 +84,13 @@
                                 },
                             }
                         );
-                        dataset = [];
+
                     }else {
                         myChart.data.labels = labels;
                         myChart.data.datasets = dataset;
                         myChart.update();
                     }
+                dataset = [];
 
             }
         },JSON.stringify({
