@@ -43,10 +43,14 @@
         }).then(callback);
     }
     let srez_ = [];
+    let all = [];
+    let label = [];
+
     async function reload(){
         request((response)=>{
             srez_ = response.srez;
-
+            all = response.all;
+            label = response.dataset.label;
             if(response.dataset) {
 
                     labels = response.dataset.labels;
@@ -111,27 +115,57 @@
     <div>
         <canvas id="myChart"></canvas>
     </div>
+    <div>
+        {#if all.length>0}
+            <p class="mt-5">C {labels[labels.length-1]} по {labels[0]}</p>
+        <table class="table table-striped table-hover table-sm table-bordered mb-5">
+            <tbody>
+        {#each all as v,k}
+            <tr><td><b>{label[k]}</b></td><td>{v}</td></tr>
+        {/each}
+            </tbody>
+        </table>
+
+        {/if}
+    </div>
+    {#if srez_.length>0}
     <table class="table table-striped table-hover table-sm table-bordered">
         <thead>
         <tr>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Prop</th>
-            <th>Povtor 31d/1d</th>
+            <th>дата</th>
+            <th>повтор 31d/1d</th>
+            <th>статут среза</th>
+            <th>фио</th>
+            <th>дата рождения</th>
+            <th>номер телефона</th>
+            <th>регион</th>
+            <th>город</th>
+            <th>сумма</th>
+            <th>срок</th>
+            <th>обьявление</th>
+
         </tr>
         </thead>
         <tbody>
         {#each srez_ as srez}
                     <tr>
-
                         <td>{srez.date}</td>
+                        <td>{#if srez.f1}{srez.f1}{/if}/{#if srez.f2}{srez.f2}{/if}</td>
                         <td>{srez.error}</td>
-                        <td>{JSON.stringify(srez.prop)}</td>
-                        <td>{#if srez.f1}{srez.f1}{/if}{#if srez.f2}/{srez.f2}{/if}</td>
+                        <td>{srez.prop.EMAIL}{#if srez.prop.NAME}<br>{srez.prop.NAME}{/if}</td>
+                        <td>{srez.prop.DAY}-{srez.prop.MONTH}-{srez.prop.YEAR}</td>
+                        <td>{srez.prop.TELE}</td>
+                        <td>{srez.prop.REGION}</td>
+                        <td>{srez.prop.CITY}</td>
+                        <td>{srez.prop.SUM}</td>
+                        <td>{srez.prop.PERIOD}</td>
+                        <td>{srez.prop.ADS}</td>
+
+
                     </tr>
         {/each}
         </tbody>
     </table>
-
+    {/if}
 
 </section>
