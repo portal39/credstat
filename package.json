@@ -24,6 +24,7 @@
     "svelte-json-tree-auto": "^0.1.0"
   },
   "dependencies": {
+    "litepicker": "^2.0.11",
     "sirv-cli": "^1.0.11"
   }
 }

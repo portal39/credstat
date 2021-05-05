@@ -2,6 +2,7 @@
     import {isAuthenticated} from "./store";
     import {onMount,onDestroy} from "svelte";
     let interval = false;
+    import Litepicker from 'litepicker';
 
     onDestroy(async () => {
         if(interval)clearInterval(interval);
@@ -9,7 +10,6 @@
     let myChart = false;
     onMount(async () => {
         isAuthenticated.subscribe(load);
-
     });
     async function load(isAuth){
 
@@ -17,6 +17,30 @@
             reload();
             if(interval)clearInterval(interval);
             interval = setInterval(reload, 20000);
+            new Litepicker({
+                element: document.getElementById('datepicker'),
+                singleMode: false,
+                maxDate: new Date(),
+                tooltipText: {
+                    one: 'night',
+                    other: 'nights'
+                },
+                lang: "ru-RU",
+                numberOfMonths: 2,
+                numberOfColumns:2,
+                format: "YYYY/MM/DD",
+                setup: (picker) => {
+                    picker.on('selected', (date1, date2) => {
+                        dateMin = date1.format('YYYY/MM/DD');
+                        dateMax = date2.format('YYYY/MM/DD');
+                        reload();
+                        clearInterval(interval);
+                    });
+                },
+                tooltipNumber: (totalDays) => {
+                    return totalDays - 1;
+                }
+            })
         }else{
             clearInterval(interval);
         }
@@ -30,6 +54,7 @@
     ];
     let labels = [];
     let dataset = [];
+    let dateMin=false, dateMax=false;
 
     function request(callback,data){
         fetch('https://api.swcred.ru/stat/', {
@@ -48,6 +73,7 @@
 
     async function reload(){
         request((response)=>{
+
             srez_ = response.srez;
             all = response.all;
             label = response.dataset.label;
@@ -95,14 +121,15 @@
                         myChart.update();
                     }
                 dataset = [];
-
             }
         },JSON.stringify({
             action: 'getSrez',
+            dateMin: dateMin,
+            dateMax: dateMax
             // filter: filter
         }))
     }
-
+    let hide = true;
 
 
 </script>
@@ -116,7 +143,9 @@
         <canvas id="myChart"></canvas>
     </div>
     <div>
+        <button type="button" class="btn btn-secondary" id="datepicker">DatePicker</button>
         {#if all.length>0}
+
             <p class="mt-5">C {labels[labels.length-1]} по {labels[0]}</p>
         <table class="table table-striped table-hover table-sm table-bordered mb-5">
             <tbody>
@@ -129,6 +158,10 @@
         {/if}
     </div>
     {#if srez_.length>0}
+        <div class="form-check form-switch">
+            <input class="form-check-input" bind:checked={hide} type="checkbox" id="flexSwitchCheckDefault">
+            <label class="form-check-label" for="flexSwitchCheckDefault">Hide/Show Ads</label>
+        </div>
     <table class="table table-striped table-hover table-sm table-bordered">
         <thead>
         <tr>
@@ -142,7 +175,7 @@
             <th>город</th>
             <th>сумма</th>
             <th>срок</th>
-            <th>обьявление</th>
+            <th class:d-none={hide}>обьявление</th>
 
         </tr>
         </thead>
@@ -159,7 +192,7 @@
                         <td>{srez.prop.CITY}</td>
                         <td>{srez.prop.SUM}</td>
                         <td>{srez.prop.PERIOD}</td>
-                        <td>{srez.prop.ADS}</td>
+                        <td class:d-none={hide}>{srez.prop.ADS}</td>
 
 
                     </tr>
