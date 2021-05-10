@@ -70,12 +70,15 @@
     let srez_ = [];
     let all = [];
     let label = [];
+    let phone = [];
 
     async function reload(){
         request((response)=>{
 
             srez_ = response.srez;
             all = response.all;
+            phone = response.phone;
+            console.log(phone)
             label = response.dataset.label;
             if(response.dataset) {
 
@@ -183,7 +186,7 @@
         {#each srez_ as srez}
                     <tr>
                         <td>{srez.date}</td>
-                        <td>{#if srez.f1}{srez.f1}{/if}/{#if srez.f2}{srez.f2}{/if}</td>
+                        <td>{#if srez.f1}{srez.f1}{/if}/{#if srez.f2}{srez.f2}{/if}<br>{#if phone[srez.prop.TELE.toString()]}[<b>{phone[srez.prop.TELE].join(', ')}</b>]{/if}</td>
                         <td>{srez.error}</td>
                         <td>{srez.prop.EMAIL}{#if srez.prop.NAME}<br>{srez.prop.NAME}{/if}</td>
                         <td>{srez.prop.DAY}-{srez.prop.MONTH}-{srez.prop.YEAR}</td>
