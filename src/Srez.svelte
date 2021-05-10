@@ -78,7 +78,7 @@
             srez_ = response.srez;
             all = response.all;
             phone = response.phone;
-            console.log(phone)
+            // console.log(phone)
             label = response.dataset.label;
             if(response.dataset) {
 
